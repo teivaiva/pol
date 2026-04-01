@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ProjectAttributes {
 
     private String name;
-    private String description;
+    private Description description;
     private String location;
     private String lead;
     private String created;
@@ -28,11 +28,11 @@ public class ProjectAttributes {
         this.name = name;
     }
 
-    public String getDescription() {
+    public Description getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(Description description) {
         this.description = description;
     }
 
