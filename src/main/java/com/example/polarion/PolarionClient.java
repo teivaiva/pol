@@ -47,7 +47,7 @@ public class PolarionClient {
      * GET request; returns response body as string.
      */
     public String get(String path) throws Exception {
-        return get(path, null);
+        return get(path, (Map<String, String>) null);
     }
 
     /**
