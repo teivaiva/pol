@@ -104,14 +104,51 @@ public class Main {
 //            }
 
 
-            // ---------- Work items for a project (replace PROJECT_ID) ----------
-             ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("CABLE", 10, 1, null, null, null);
-             if (wis.getData() != null) {
-                 for (Resource<WorkItemAttributes> r : wis.getData()) {
-                     WorkItemAttributes a = r.getAttributes();
-                     if (a != null) System.out.println(r.getId() + " " + a.getTitle() + " " + a.getStatus());
-                 }
-             }
+            // ---------- Work items for a project ----------
+            System.out.println("\n=== Testing work items retrieval for project CABLE ===");
+            try {
+                // First get raw JSON response to understand structure
+                System.out.println("\nGetting raw JSON response for work items...");
+                String rawWorkItems = api.getClient().get("/projects/CABLE/workitems");
+                System.out.println("Raw work items response (first 1000 chars):\n" + rawWorkItems.substring(0, Math.min(1000, rawWorkItems.length())) + (rawWorkItems.length() > 1000 ? "..." : ""));
+                
+                // Fetch a single work item to see full attribute structure
+                System.out.println("\nFetching single work item CBL-4297 for full attributes...");
+                String singleWorkItem = api.getClient().get("/projects/CABLE/workitems/CBL-4297");
+                System.out.println("Single work item response (first 1500 chars):\n" + singleWorkItem.substring(0, Math.min(1500, singleWorkItem.length())) + (singleWorkItem.length() > 1500 ? "..." : ""));
+                ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("CABLE", 10, 1, null, null, null);
+                
+                if (wis.getData() != null) {
+                    System.out.println("Found " + wis.getData().size() + " work items:");
+                    int count = 0;
+                    for (Resource<WorkItemAttributes> r : wis.getData()) {
+                        count++;
+                        System.out.println("\n  Work item #" + count + ":");
+                        System.out.println("    ID: " + r.getId());
+                        System.out.println("    Type: " + r.getType());
+                        WorkItemAttributes a = r.getAttributes();
+                        if (a != null) {
+                            System.out.println("    Title: " + a.getTitle());
+                            System.out.println("    Status: " + a.getStatus());
+                            System.out.println("    Work item type: " + a.getType());
+                            System.out.println("    Description: " + (a.getDescription() != null ? a.getDescription().getValue() : "null"));
+                        } else {
+                            System.out.println("    Attributes: null (deserialization may have failed)");
+                        }
+                    }
+                } else {
+                    System.out.println("No work items data returned");
+                }
+            } catch (PolarionClient.PolarionApiException e) {
+                System.err.println("API error getting work items: " + e.getStatusCode() + ": " + e.getMessage());
+                String body = e.getResponseBody();
+                if (body != null && !body.isEmpty()) {
+                    System.err.println("Response body: " + body);
+                }
+            } catch (Exception e) {
+                System.err.println("General error getting work items: " + e.getMessage());
+                e.printStackTrace();
+            }
 
         } catch (PolarionClient.PolarionApiException e) {
             System.err.println("API error " + e.getStatusCode() + ": " + e.getMessage());

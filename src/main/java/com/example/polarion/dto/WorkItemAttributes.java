@@ -13,7 +13,7 @@ import java.util.Map;
 public class WorkItemAttributes {
 
     private String title;
-    private String description;
+    private Description description;
     private String status;
     private String type;
     private String resolution;
@@ -38,11 +38,11 @@ public class WorkItemAttributes {
         this.title = title;
     }
 
-    public String getDescription() {
+    public Description getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(Description description) {
         this.description = description;
     }
 
