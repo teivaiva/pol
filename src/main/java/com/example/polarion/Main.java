@@ -116,24 +116,43 @@ public class Main {
                 System.out.println("\nFetching single work item CBL-4297 for full attributes...");
                 String singleWorkItem = api.getClient().get("/projects/CABLE/workitems/CBL-4297");
                 System.out.println("Single work item response (first 1500 chars):\n" + singleWorkItem.substring(0, Math.min(1500, singleWorkItem.length())) + (singleWorkItem.length() > 1500 ? "..." : ""));
+                // Get work item IDs from list (list doesn't include attributes)
                 ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("CABLE", 10, 1, null, null, null);
                 
                 if (wis.getData() != null) {
-                    System.out.println("Found " + wis.getData().size() + " work items:");
+                    System.out.println("Found " + wis.getData().size() + " work items in list (IDs only):");
+                    
+                    // Bulk fetch: Get full attributes for each work item
+                    System.out.println("\n=== Bulk fetching work items with full attributes ===");
                     int count = 0;
                     for (Resource<WorkItemAttributes> r : wis.getData()) {
                         count++;
-                        System.out.println("\n  Work item #" + count + ":");
-                        System.out.println("    ID: " + r.getId());
-                        System.out.println("    Type: " + r.getType());
-                        WorkItemAttributes a = r.getAttributes();
-                        if (a != null) {
-                            System.out.println("    Title: " + a.getTitle());
-                            System.out.println("    Status: " + a.getStatus());
-                            System.out.println("    Work item type: " + a.getType());
-                            System.out.println("    Description: " + (a.getDescription() != null ? a.getDescription().getValue() : "null"));
-                        } else {
-                            System.out.println("    Attributes: null (deserialization may have failed)");
+                        String workItemId = r.getId(); // Format: "CABLE/CBL-4297"
+                        String simpleId = workItemId.contains("/") ? workItemId.split("/")[1] : workItemId;
+                        
+                        System.out.println("\n  Work item #" + count + " (" + simpleId + "):");
+                        
+                        try {
+                            // Fetch individual work item for full attributes
+                            ApiSingleResponse<WorkItemAttributes> singleResponse = api.workItems().getWorkItemAsDto("CABLE", simpleId);
+                            Resource<WorkItemAttributes> singleResource = singleResponse.getData();
+                            
+                            if (singleResource != null && singleResource.getAttributes() != null) {
+                                WorkItemAttributes a = singleResource.getAttributes();
+                                System.out.println("    Title: " + a.getTitle());
+                                System.out.println("    Status: " + a.getStatus());
+                                System.out.println("    Type: " + a.getType());
+                                System.out.println("    Severity: " + a.getSeverity());
+                                System.out.println("    Description: " + (a.getDescription() != null ? a.getDescription().getValue() : "null"));
+                                System.out.println("    Created: " + a.getCreated());
+                                System.out.println("    Updated: " + a.getUpdated());
+                            } else {
+                                System.out.println("    No attributes returned for individual work item");
+                            }
+                        } catch (PolarionClient.PolarionApiException e) {
+                            System.err.println("    API error fetching work item " + simpleId + ": " + e.getStatusCode() + ": " + e.getMessage());
+                        } catch (Exception e) {
+                            System.err.println("    General error fetching work item " + simpleId + ": " + e.getMessage());
                         }
                     }
                 } else {
