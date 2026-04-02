@@ -30,13 +30,13 @@ public class Main {
 
         try {
             // ---------- Test simple API root first ----------
-            System.out.println("Testing API root endpoint...");
-            try {
-                String rootResponse = api.getClient().get("/");
-                System.out.println("API root response (first 200 chars): " + rootResponse.substring(0, Math.min(200, rootResponse.length())) + "...");
-            } catch (Exception e) {
-                System.err.println("Failed to get API root: " + e.getMessage());
-            }
+//            System.out.println("Testing API root endpoint...");
+//            try {
+//                String rootResponse = api.getClient().get("/");
+//                System.out.println("API root response (first 200 chars): " + rootResponse.substring(0, Math.min(200, rootResponse.length())) + "...");
+//            } catch (Exception e) {
+//                System.err.println("Failed to get API root: " + e.getMessage());
+//            }
             
             // ---------- Projects list (commented out - user doesn't have permission) ----------
             // ApiListResponse<ProjectAttributes> projectsResponse = api.projects().getProjectsAsDto();
@@ -105,13 +105,13 @@ public class Main {
 
 
             // ---------- Work items for a project (replace PROJECT_ID) ----------
-            // ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("PROJECT_ID", 10, 1, null, null, null);
-            // if (wis.getData() != null) {
-            //     for (Resource<WorkItemAttributes> r : wis.getData()) {
-            //         WorkItemAttributes a = r.getAttributes();
-            //         if (a != null) System.out.println(r.getId() + " " + a.getTitle() + " " + a.getStatus());
-            //     }
-            // }
+             ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("CABLE", 10, 1, null, null, null);
+             if (wis.getData() != null) {
+                 for (Resource<WorkItemAttributes> r : wis.getData()) {
+                     WorkItemAttributes a = r.getAttributes();
+                     if (a != null) System.out.println(r.getId() + " " + a.getTitle() + " " + a.getStatus());
+                 }
+             }
 
         } catch (PolarionClient.PolarionApiException e) {
             System.err.println("API error " + e.getStatusCode() + ": " + e.getMessage());
