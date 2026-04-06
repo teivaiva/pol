@@ -3,6 +3,7 @@ package com.example.polarion;
 import com.example.polarion.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -117,15 +118,49 @@ public class Main {
                 String singleWorkItem = api.getClient().get("/projects/CABLE/workitems/CBL-4297");
                 System.out.println("Single work item response (first 1500 chars):\n" + singleWorkItem.substring(0, Math.min(1500, singleWorkItem.length())) + (singleWorkItem.length() > 1500 ? "..." : ""));
                 // Get work item IDs from list (list doesn't include attributes)
-                ApiListResponse<WorkItemAttributes> wis = api.workItems().getWorkItemsAsDto("CABLE", 10, 1, null, null, null);
+                // First, get all work item IDs from all pages
+                System.out.println("\n=== Fetching all work items with pagination ===");
                 
-                if (wis.getData() != null) {
-                    System.out.println("Found " + wis.getData().size() + " work items in list (IDs only):");
+                List<Resource<WorkItemAttributes>> allWorkItems = new ArrayList<>();
+                int pageNumber = 1;
+                int pageSize = 100; // Try larger page size
+                boolean hasMorePages = true;
+                int totalItems = 0;
+                
+                while (hasMorePages) {
+                    System.out.println("Fetching page " + pageNumber + "...");
+                    ApiListResponse<WorkItemAttributes> pageResponse = api.workItems().getWorkItemsAsDto("CABLE", pageSize, pageNumber, null, null, null);
                     
-                    // Bulk fetch: Get full attributes for each work item
+                    if (pageResponse.getData() != null && !pageResponse.getData().isEmpty()) {
+                        allWorkItems.addAll(pageResponse.getData());
+                        totalItems += pageResponse.getData().size();
+                        System.out.println("  Found " + pageResponse.getData().size() + " items on this page (total: " + totalItems + ")");
+                        
+                        // Check if there's a next page
+                        if (pageResponse.getLinks() != null && pageResponse.getLinks().getNext() != null) {
+                            pageNumber++;
+                        } else {
+                            hasMorePages = false;
+                            System.out.println("No more pages. Total work items found: " + totalItems);
+                        }
+                    } else {
+                        hasMorePages = false;
+                        System.out.println("No data on page " + pageNumber + ". Total work items found: " + totalItems);
+                    }
+                    
+                    // Safety limit: don't fetch more than 100 pages
+                    if (pageNumber > 100) {
+                        System.out.println("Safety limit reached: stopping at 100 pages");
+                        hasMorePages = false;
+                    }
+                }
+                
+                if (!allWorkItems.isEmpty()) {
                     System.out.println("\n=== Bulk fetching work items with full attributes ===");
+                    System.out.println("Total work items to fetch: " + allWorkItems.size());
+                    
                     int count = 0;
-                    for (Resource<WorkItemAttributes> r : wis.getData()) {
+                    for (Resource<WorkItemAttributes> r : allWorkItems) {
                         count++;
                         String workItemId = r.getId(); // Format: "CABLE/CBL-4297"
                         String simpleId = workItemId.contains("/") ? workItemId.split("/")[1] : workItemId;
